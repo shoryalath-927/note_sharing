@@ -1,0 +1,16 @@
+# Secrets
+.env
+
+# Large Local Database
+noteshare.db
+
+# Heavy Dependencies
+node_modules/
+frontend/node_modules/
+
+# Uploaded Files (PDFs)
+uploads/
+
+# Python Cache
+__pycache__/
+*.pyc
