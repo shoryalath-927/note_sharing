@@ -1,4 +1,4 @@
-const BASE = '/api'
+const BASE = 'http://127.0.0.1:8080/api'
 
 export async function uploadNote(formData) {
   const res = await fetch(`${BASE}/notes/upload`, {
