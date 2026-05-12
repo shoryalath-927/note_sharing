@@ -168,7 +168,7 @@ export default function NoteDetail() {
       {/* View PDF link */}
       <div>
         <a
-          href={`http://localhost:8000/uploads/${note.file_path?.split('/').pop()}`}
+          href={`http://localhost:8000/uploads/${note.saved_filename}`}
           target="_blank"
           rel="noreferrer"
           className="btn btn-outline"

@@ -234,11 +234,15 @@ async def get_subjects(db: AsyncSession = Depends(get_db)):
 
 @router.get("/{note_id}")
 async def get_note(note_id: int, db: AsyncSession = Depends(get_db)):
-    """Get a single note by ID with full scoring details."""
-    note = await db.get(Note, note_id)
-    if not note:
-        raise HTTPException(status_code=404, detail="Note not found")
-    return note.to_dict()
+    try:
+        note = await db.get(Note, note_id)
+        if not note:
+            raise HTTPException(status_code=404, detail="Note not found")
+        return note.to_dict()
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{note_id}/rate")
@@ -272,3 +276,18 @@ async def rate_note(
         "rating_count": note.rating_count,
         "recommendation_score": note.recommendation_score,
     }
+
+@router.post("/rescore-all")
+async def rescore_all(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+    """Re-trigger scoring for all notes that have default scores."""
+    stmt = select(Note).where(Note.status == "scored")
+    result = await db.execute(stmt)
+    notes = result.scalars().all()
+    count = 0
+    for note in notes:
+        if note.final_score <= 50.0:  # default score = was never properly scored
+            note.status = "pending"
+            background_tasks.add_task(score_note_background, note.id, note.file_path, note.subject)
+            count += 1
+    await db.commit()
+    return {"message": f"Re-scoring {count} notes"}
