@@ -1,0 +1,15 @@
+# Render Blueprint: one web service (FastAPI API + built React frontend) from the Dockerfile.
+# Render dashboard → New → Blueprint → pick this repo.
+services:
+  - type: web
+    name: noteshare
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false # entered in the dashboard, never committed
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false

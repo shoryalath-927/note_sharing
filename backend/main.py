@@ -58,19 +58,35 @@ uploads_dir.mkdir(exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 
-@app.get("/")
-async def root():
-    return {
-        "app": "NoteShare AI",
-        "version": "1.0.0",
-        "docs": "/docs",
-        "status": "running"
-    }
-
-
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+# Serve the built React app (frontend/dist) when it exists, e.g. in Docker / on Render.
+# Unknown paths fall back to index.html so client-side routes like /note/5 work on refresh.
+frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+
+if frontend_dist.is_dir():
+    from fastapi.responses import FileResponse
+
+    app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa(full_path: str):
+        candidate = (frontend_dist / full_path).resolve()
+        if full_path and candidate.is_file() and frontend_dist in candidate.parents:
+            return FileResponse(candidate)
+        return FileResponse(frontend_dist / "index.html")
+else:
+    @app.get("/")
+    async def root():
+        return {
+            "app": "NoteShare AI",
+            "version": "1.0.0",
+            "docs": "/docs",
+            "status": "running"
+        }
 
 
 if __name__ == "__main__":

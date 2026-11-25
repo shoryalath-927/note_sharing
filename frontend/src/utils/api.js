@@ -1,4 +1,5 @@
-const BASE = 'http://127.0.0.1:8080/api'
+// Same-origin in production (FastAPI serves the built frontend); Vite proxies /api in dev.
+const BASE = import.meta.env.VITE_API_URL || '/api'
 
 export async function uploadNote(formData) {
   const res = await fetch(`${BASE}/notes/upload`, {
